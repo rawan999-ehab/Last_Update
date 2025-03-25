@@ -30,7 +30,7 @@ class _HomeScreenState extends State<Home_Screen> {
     companyid = args; // Initialize companyId
     _pages = [
       HomePageContent(companyId: companyid),
-      AgreementScreen(),
+      Agreement_Screen(),
       Placeholder(), // Replace with actual screen if needed
       Profile(),
     ];
@@ -50,7 +50,10 @@ class _HomeScreenState extends State<Home_Screen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-
+          image: DecorationImage(
+            image: AssetImage("assets/images/background.jpeg"), // Same background as LoginScreen
+            fit: BoxFit.cover,
+          ),
         ),
         child: SafeArea(
           child: _pages[_selectedIndex], // Display the selected page

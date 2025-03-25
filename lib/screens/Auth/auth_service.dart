@@ -70,7 +70,6 @@ class AuthService {
       _snackBarService.showCustomSnackBar(context, 'An unexpected error occurred. Please try again.', Colors.red);
     }
   }
-
   Future<void> signInWithGoogle(BuildContext context) async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
