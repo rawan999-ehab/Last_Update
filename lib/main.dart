@@ -16,20 +16,16 @@ import 'Company Screens/Home_Screen.dart';
 import 'Adminscreens/Features/Admin-MS.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/Auth/auth_provider.dart'; // استيراد AuthProvider
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
   // Initialize OneSignal
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
   OneSignal.initialize("a7907370-789c-4b08-b75d-88a68dd2490a"); // Replace with your OneSignal App ID
   OneSignal.Notifications.requestPermission(true);
-
   await dotenv.load(fileName: "dotenv.get"); // Load dotenv.get file
-
   runApp(
     MultiProvider(
       providers: [
@@ -40,12 +36,11 @@ void main() async {
     ),
   );
 }
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      // debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       initialRoute: SplashScreen.routeName,
       routes: {

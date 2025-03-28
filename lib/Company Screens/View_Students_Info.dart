@@ -1,60 +1,48 @@
 import 'package:flutter/material.dart';
-
 class ViewStudentsInfo extends StatefulWidget {
+  final String internshipId;
+  const ViewStudentsInfo({Key? key, required this.internshipId}) : super(key: key);
   @override
-  _ViewStudentsInfoState createState() => _ViewStudentsInfoState();
-}
-
+  _ViewStudentsInfoState createState() => _ViewStudentsInfoState();}
 class _ViewStudentsInfoState extends State<ViewStudentsInfo>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   bool isLoading = true;
   List<Map<String, dynamic>> agreements = [];
-
   @override
   void initState() {
     super.initState();
-
-    // Loading design
     _controller = AnimationController(
       vsync: this,
       duration: Duration(seconds: 1),
     )..repeat(reverse: true);
-
     _rotationAnimation = Tween<double>(begin: 0, end: 3.14).animate(_controller);
-
     loadAgreements();
   }
-
   Future<void> loadAgreements() async {
-    await Future.delayed(Duration(seconds: 3)); // Loading Time
-    List<Map<String, dynamic>> data = [
-      {"name": "Ahmed Abo El Asm", "job": "Java Developer", "cv": "Ahmed_CV.pdf", "accepted": false},
+    await Future.delayed(Duration(seconds: 3));
+    agreements = [
+      {"name": "Ahmed Abo El Asm", "job": "Java Developer", "cv": "Ahmed_CV.pdf", "accepted": false},//الاسم عندك من ال user
       {"name": "Mohamed Hassan", "job": "Flutter Developer", "cv": "Mohamed_CV.pdf", "accepted": false},
       {"name": "Abdelrahman Mostafa", "job": "UI/UX Designer", "cv": "Abdelrahman_CV.pdf", "accepted": false},
       {"name": "Nada Mostafa", "job": "Backend Developer", "cv": "Nada_CV.pdf", "accepted": false},
       {"name": "Hazem Ahmed", "job": "Data Scientist", "cv": "Hazem_CV.pdf", "accepted": false},
     ];
-
     setState(() {
-      agreements = data;
       isLoading = false;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // تم نقل backgroundColor هنا
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Color(0xFF2252A1)),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Students Info",
@@ -64,54 +52,40 @@ class _ViewStudentsInfoState extends State<ViewStudentsInfo>
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // clock design
-            isLoading
-                ? Expanded(
-              child: Center(
-                child: AnimatedBuilder(
-                  animation: _rotationAnimation,
-                  builder: (context, child) {
-                    return Transform.rotate(
-                      angle: _rotationAnimation.value,
-                      child: Icon(
-                        Icons.hourglass_empty,
-                        size: 60,
-                        color: Color(0xFF2252A1),
-                      ),
-                    );
-                  },
+        child: isLoading
+            ? Center(
+          child: AnimatedBuilder(
+            animation: _rotationAnimation,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _rotationAnimation.value,
+                child: Icon(
+                  Icons.hourglass_empty,
+                  size: 60,
+                  color: Color(0xFF2252A1),
                 ),
-              ),
-            )
-                : Expanded(
-              child: ListView.builder(
-                itemCount: agreements.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: buildAgreementBox(index),
-                  );
-                },
-              ),
-            ),
-          ],
+              );
+            },
+          ),
+        )
+            : ListView.builder(
+          itemCount: agreements.length,
+          itemBuilder: (context, index) => Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: buildAgreementBox(index),
+          ),
         ),
       ),
     );
   }
-
   Widget buildAgreementBox(int index) {
     Map<String, dynamic> agreement = agreements[index];
     bool isAccepted = agreement["accepted"];
-
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: isAccepted ? Colors.grey : Colors.blue),
         borderRadius: BorderRadius.circular(10),
-        color: isAccepted ? Colors.white : Colors.transparent,
+        color: Colors.white,
       ),
       padding: EdgeInsets.all(16),
       child: Column(
@@ -152,13 +126,8 @@ class _ViewStudentsInfoState extends State<ViewStudentsInfo>
             ),
           ),
           SizedBox(height: 10),
-
           ElevatedButton(
-            onPressed: isAccepted
-                ? null
-                : () {
-              acceptAgreement(index);
-            },
+            onPressed: isAccepted ? null : () => acceptAgreement(index),
             style: ElevatedButton.styleFrom(
               backgroundColor: isAccepted ? Colors.grey : Color(0xFF2252A1),
               shape: RoundedRectangleBorder(
@@ -177,12 +146,10 @@ class _ViewStudentsInfoState extends State<ViewStudentsInfo>
       ),
     );
   }
-
   void acceptAgreement(int index) {
     setState(() {
       agreements[index]["accepted"] = true;
     });
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("You have accepted ${agreements[index]["name"]}!"),
@@ -191,7 +158,6 @@ class _ViewStudentsInfoState extends State<ViewStudentsInfo>
       ),
     );
   }
-
   @override
   void dispose() {
     _controller.dispose();

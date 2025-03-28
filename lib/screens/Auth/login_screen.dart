@@ -151,9 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: authProvider.isLoading
                               ? null // تعطيل الزر إذا كان التحميل قيد التقدم
                               : () async {
-                            authProvider.setLoading(true); // بدء التحميل
-                            await _authService.signInWithGoogle(context);
-                            authProvider.setLoading(false); // إيقاف التحميل بعد الانتهاء
+                            //authProvider.setLoading(true); // بدء التحميل
+                          //  await _authService.signInWithGoogle(context);
+                           // authProvider.setLoading(false); // إيقاف التحميل بعد الانتهاء
                           },
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(

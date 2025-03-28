@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 class JobCard extends StatelessWidget {
   final String title;
   final String location;
@@ -7,7 +6,6 @@ class JobCard extends StatelessWidget {
   final String applicants;
   final String type1;
   final String type2;
-
   const JobCard({
     required this.title,
     required this.location,
@@ -16,7 +14,6 @@ class JobCard extends StatelessWidget {
     required this.type1,
     required this.type2,
   });
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -71,14 +68,10 @@ class JobCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// Tag button widget
+} // Tag button widget
 class TagButton extends StatelessWidget {
   final String text;
-
   const TagButton({required this.text});
-
   @override
   Widget build(BuildContext context) {
     return Container(
