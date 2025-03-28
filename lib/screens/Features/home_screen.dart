@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Add Firestore package
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../details/internship_details_screen.dart';
+import 'chatbot/chat_bot_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/HomeScreen';
@@ -13,16 +14,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool isSaved = false;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
-  List<Map<String, dynamic>> jobList = []; // List to store fetched data
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> jobList = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchInternships(); // Fetch data when the screen loads
+    _fetchInternships();
   }
 
-  // Function to fetch data from Firestore
   Future<void> _fetchInternships() async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('interns').get();
@@ -91,6 +91,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatBotScreen()),
+          );
+        },
+        backgroundColor: Colors.blue,
+        shape: CircleBorder(),
+        child: Icon(Icons.smart_toy, color: Colors.white, size: 30),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -114,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  job["company"] ?? "Unknown Company", // Use null-aware operator
+                  job["company"] ?? "Unknown Company",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -125,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(width: screenWidth * 0.03),
               Expanded(
                 child: Text(
-                  job["title"] ?? "Unknown Title", // Use null-aware operator
+                  job["title"] ?? "Unknown Title",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: screenWidth * 0.04,
@@ -136,77 +148,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: screenHeight * 0.01),
           Text(
-            job["location"] ?? "Unknown Location", // Use null-aware operator
+            job["location"] ?? "Unknown Location",
             style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.033),
           ),
           SizedBox(height: screenHeight * 0.015),
           Row(
             children: [
-              _buildTag(job["type"] ?? "Unknown Type", Icons.check), // Use null-aware operator
+              _buildTag(job["type"] ?? "Unknown Type", Icons.check),
               SizedBox(width: screenWidth * 0.02),
-              _buildTag(job["internship"] ?? "Unknown Type", Icons.check), // Use null-aware operator
-            ],
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: screenHeight * 0.04,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => internship_details_screen(
-                            internshipData: job, // Pass the selected internship data
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF196AB3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    label: Text("See More", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
-                    icon: Icon(Icons.trending_up, color: Colors.white, size: screenWidth * 0.05),
-                  ),
-                ),
-              ),
-              SizedBox(width: screenWidth * 0.03),
-              Expanded(
-                child: SizedBox(
-                  height: screenHeight * 0.04,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        isSaved = !isSaved;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: isSaved ? Colors.blue : Colors.white,
-                      side: BorderSide(color: Colors.blue, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    icon: Icon(
-                      isSaved ? Icons.bookmark : Icons.bookmark_border,
-                      color: isSaved ? Colors.white : Colors.blue,
-                      size: screenWidth * 0.05,
-                    ),
-                    label: Text(
-                      "Save",
-                      style: TextStyle(
-                        color: isSaved ? Colors.white : Colors.blue,
-                        fontSize: screenWidth * 0.04,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              _buildTag(job["internship"] ?? "Unknown Type", Icons.check),
             ],
           ),
         ],

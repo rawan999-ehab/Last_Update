@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../assessments/main/quiz_home_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'feedback_screen.dart';
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     CoursesScreen(),
     AtsScreen(),
+    QuizHomeScreen(),
     ProfileScreen()
   ];
 
