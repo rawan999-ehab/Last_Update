@@ -15,7 +15,7 @@ class Nav_Bar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(Icons.home, "Home", 0),
-          _buildNavItem(Icons.assignment, "AgreementScreen", 1),
+          _buildNavItem(Icons.assignment, "Agreement", 1),
           SizedBox(width: 48),
           _buildNavItem(Icons.history, "History", 2),
           _buildNavItem(Icons.person, "Profile", 3),

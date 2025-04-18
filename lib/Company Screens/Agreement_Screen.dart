@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'View_Students_Info.dart';
 import 'CompanyService.dart';
-import 'package:project/screens/Auth/auth_service.dart';
+import 'package:project/Student Screens/Auth/auth_service.dart';
 class AgreementScreen extends StatefulWidget {
   @override
   _AgreementScreenState createState() => _AgreementScreenState();}

@@ -1,57 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // تأكد من استيراد حزمة provider
-import 'screens/Auth/register_screen.dart';
-import 'screens/splash_screen.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
-// Auth
-import 'screens/Auth/login_screen.dart';
-import 'screens/Auth/forgot_password_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-// Features
-import 'screens/Features/main_screen.dart';
-// Company
-import 'Company Screens/Home_Screen.dart';
-// Admin
-import 'Adminscreens/Features/Admin-MS.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'screens/Auth/auth_provider.dart'; // استيراد AuthProvider
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+
+// Firebase config
+import 'firebase_options.dart';
+
+// Auth
+import 'Student Screens/Auth/auth_provider.dart';
+import 'Student Screens/Auth/login_screen.dart';
+import 'Student Screens/Auth/register_screen.dart';
+import 'Student Screens/Auth/forgot_password_screen.dart';
+
+// Screens
+import 'Student Screens/splash_screen.dart';
+import 'Student Screens/Features/main_student.dart';
+import 'Admin screens/Features/Admin-MS.dart';
+// ❌ شيل import بتاع MainCompany من الراوتس
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   // Initialize OneSignal
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-  OneSignal.initialize("a7907370-789c-4b08-b75d-88a68dd2490a"); // Replace with your OneSignal App ID
+  OneSignal.initialize("a7907370-789c-4b08-b75d-88a68dd2490a");
   OneSignal.Notifications.requestPermission(true);
-  await dotenv.load(fileName: "dotenv.get"); // Load dotenv.get file
+
+  // Load .env variables
+  await dotenv.load(fileName: "dotenv.get");
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()), // إضافة AuthProvider
-        // يمكنك إضافة المزيد من الـ Providers هنا
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: MyApp(),
     ),
   );
 }
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // debugShowCheckedModeBanner: false,
+      title: 'My App',
+      debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       initialRoute: SplashScreen.routeName,
       routes: {
         SplashScreen.routeName: (_) => SplashScreen(),
         MainScreen.routeName: (_) => MainScreen(),
         Adminms.routeName: (_) => Adminms(),
-        // Auth
+
+        // Auth Screens
         LoginScreen.routeName: (_) => const LoginScreen(),
         RegisterScreen.routeName: (_) => RegisterScreen(),
         ForgotPasswordScreen.routeName: (_) => const ForgotPasswordScreen(),
-        Home_Screen.routeName: (_) => Home_Screen(),
+
+        // ❌ متضيفش MainCompany هنا لأنه محتاج companyId
       },
     );
   }
