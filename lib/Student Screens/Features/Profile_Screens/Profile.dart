@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:project/Student%20Screens/Features/Profile_Screens/Setting.dart';
 import '../../Auth/login_screen.dart';
 import 'Edit_Profile.dart';
-import 'Interested_Field.dart'; // تأكد من أنك قد أنشأت صفحة InterestedField
+import 'Interested_Field.dart';
+import 'Saved_Internships.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -187,9 +189,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(builder: (context) => InterestedField()),
                   );
                 }),
-                _buildMenuItem(Icons.bookmark, 'Saved Internships'),
+                _buildMenuItem(Icons.bookmark, 'Saved Internships', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SavedInternshipScreen()),
+                  );
+                }),
                 _buildMenuItem(Icons.history, 'Student History'),
-                _buildMenuItem(Icons.settings, 'Setting'),
+                _buildMenuItem(Icons.bookmark, 'Setting', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SettingScreen()),
+                  );
+                }),
                 _buildMenuItem(Icons.help, 'Help & Support'),
                 _buildMenuItem(
                   Icons.logout,

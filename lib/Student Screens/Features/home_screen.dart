@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../details/internship_details_screen.dart';
 import 'chatbot/chat_bot_screen.dart';
 
@@ -13,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool isSaved = false;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> jobList = [];
 
@@ -27,11 +28,25 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('interns').get();
       setState(() {
-        jobList = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        jobList = querySnapshot.docs.map((doc) {
+          var data = doc.data() as Map<String, dynamic>;
+          data["id"] = doc.id; // إضافة id لتحديد كل internship
+          return data;
+        }).toList();
       });
     } catch (e) {
       print("Error fetching data: $e");
     }
+  }
+
+  Future<bool> _checkIfSaved(String internshipId) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    var snapshot = await _firestore
+        .collection('Saved_Internships')
+        .where('internshipId', isEqualTo: internshipId)
+        .where('userId', isEqualTo: userId)
+        .get();
+    return snapshot.docs.isNotEmpty;
   }
 
   @override
@@ -81,9 +96,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: jobList.length,
                 itemBuilder: (context, index) {
                   var job = jobList[index];
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-                    child: _buildJobCard(job, screenWidth, screenHeight),
+                  return FutureBuilder<bool>(
+                    future: _checkIfSaved(job["id"]),
+                    builder: (context, snapshot) {
+                      bool isSaved = snapshot.data ?? false;
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                        child: _buildJobCard(job, screenWidth, screenHeight, isSaved),
+                      );
+                    },
                   );
                 },
               ),
@@ -106,7 +127,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildJobCard(Map<String, dynamic> job, double screenWidth, double screenHeight) {
+  Widget _buildJobCard(Map<String, dynamic> job, double screenWidth, double screenHeight, bool isSaved) {
+    String internshipId = job["id"];
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
     return Container(
       padding: EdgeInsets.all(screenWidth * 0.03),
       decoration: BoxDecoration(
@@ -157,6 +181,79 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildTag(job["type"] ?? "Unknown Type", Icons.check),
               SizedBox(width: screenWidth * 0.02),
               _buildTag(job["internship"] ?? "Unknown Type", Icons.check),
+            ],
+          ),
+          SizedBox(height: screenHeight * 0.02),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: screenHeight * 0.04,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => InternshipDetailsScreen(internshipData: job),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF196AB3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    label: Text("See More", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04)),
+                    icon: Icon(Icons.trending_up, color: Colors.white, size: screenWidth * 0.05),
+                  ),
+                ),
+              ),
+              SizedBox(width: screenWidth * 0.03),
+              Expanded(
+                child: SizedBox(
+                  height: screenHeight * 0.04,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      if (!isSaved) {
+                        await _firestore.collection('Saved_Internships').add({
+                          "internshipId": internshipId,
+                          "userId": userId,
+                        });
+                      } else {
+                        var snapshot = await _firestore
+                            .collection('Saved_Internships')
+                            .where('internshipId', isEqualTo: internshipId)
+                            .where('userId', isEqualTo: userId)
+                            .get();
+                        for (var doc in snapshot.docs) {
+                          await doc.reference.delete();
+                        }
+                      }
+                      setState(() {});
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: isSaved ? Colors.blue : Colors.white,
+                      side: BorderSide(color: Colors.blue, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    icon: Icon(
+                      isSaved ? Icons.bookmark : Icons.bookmark_border,
+                      color: isSaved ? Colors.white : Colors.blue,
+                      size: screenWidth * 0.05,
+                    ),
+                    label: Text(
+                      isSaved ? "Saved" : "Save",
+                      style: TextStyle(
+                        color: isSaved ? Colors.white : Colors.blue,
+                        fontSize: screenWidth * 0.04,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ],

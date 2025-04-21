@@ -21,8 +21,8 @@ class _EditProfileState extends State<EditProfile> {
   late TextEditingController _dateOfBirthController;
   String? _selectedGender;
   String? _selectedFaculty;
-  bool _isLoading = true; // متغير التحميل
-
+  bool _isLoading = true;
+  
   @override
   void initState() {
     super.initState();

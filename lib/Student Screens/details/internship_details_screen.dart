@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Add Firestore package
-import 'package:firebase_auth/firebase_auth.dart'; // Add Firebase Auth package
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class internship_details_screen extends StatelessWidget {
-  final Map<String, dynamic> internshipData; // Data passed from HomeScreen
+class InternshipDetailsScreen extends StatelessWidget {
+  final Map<String, dynamic> internshipData;
 
-  const internship_details_screen({Key? key, required this.internshipData}) : super(key: key);
+  const InternshipDetailsScreen({Key? key, required this.internshipData}) : super(key: key);
 
-  // Function to handle the "Apply Now" button click
   Future<void> _applyForInternship(BuildContext context) async {
     try {
-      // Get the current user
       final user = FirebaseAuth.instance.currentUser;
+
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("You must be logged in to apply.")),
@@ -19,7 +18,7 @@ class internship_details_screen extends StatelessWidget {
         return;
       }
 
-      // Generate a unique request ID
+      // Check if already applied
       var existingApplication = await FirebaseFirestore.instance
           .collection('applications')
           .where('userId', isEqualTo: user.uid)
@@ -33,10 +32,8 @@ class internship_details_screen extends StatelessWidget {
         return;
       }
 
-      // Generate a unique request ID
       final requestId = FirebaseFirestore.instance.collection('applications').doc().id;
 
-      // Add application data to Firestore
       await FirebaseFirestore.instance.collection('applications').doc(requestId).set({
         "companyId": internshipData["companyId"],
         "internshipId": internshipData["internshipId"],
@@ -90,7 +87,6 @@ class internship_details_screen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Company Logo & Title
                     Row(
                       children: [
                         Container(
@@ -121,7 +117,6 @@ class internship_details_screen extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 3),
-                    // Location & Date
                     Text(
                       internshipData["location"] ?? "Unknown Location",
                       style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.03),
@@ -131,36 +126,37 @@ class internship_details_screen extends StatelessWidget {
               ),
               SizedBox(height: screenHeight * 0.010),
 
-              // 📌 Job Responsibilities
+              // 📌 Responsibilities
               _buildSectionTitle("What you will be doing:"),
               ..._buildDynamicBulletPoints(
-                  internshipData["whatYouWillBeDoing"] is List
-                      ? internshipData["whatYouWillBeDoing"]
-                      : (internshipData["whatYouWillBeDoing"] as String?)?.split("-") ?? []
+                internshipData["whatYouWillBeDoing"] is List
+                    ? internshipData["whatYouWillBeDoing"]
+                    : (internshipData["whatYouWillBeDoing"] as String?)?.split("-") ?? [],
               ),
-              // 🔍 What We Are Looking For
+
+              // 🔍 Requirements
               _buildSectionTitle("What we are looking for:"),
               ..._buildDynamicBulletPoints(
-                  internshipData["whatWeAreLookingFor"] is List
-                      ? internshipData["whatWeAreLookingFor"]
-                      : (internshipData["whatWeAreLookingFor"] as String?)?.split("-") ?? []
+                internshipData["whatWeAreLookingFor"] is List
+                    ? internshipData["whatWeAreLookingFor"]
+                    : (internshipData["whatWeAreLookingFor"] as String?)?.split("-") ?? [],
               ),
 
-              // 🎓 Preferred Qualifications
+              // 🎓 Qualifications
               _buildSectionTitle("Preferred Qualifications:"),
               ..._buildDynamicBulletPoints(
-                  internshipData["preferredQualifications"] is List
-                      ? internshipData["preferredQualifications"]
-                      : (internshipData["preferredQualifications"] as String?)?.split(" ") ?? []
+                internshipData["preferredQualifications"] is List
+                    ? internshipData["preferredQualifications"]
+                    : (internshipData["preferredQualifications"] as String?)?.split("-") ?? [],
               ),
 
-              // Apply Now Button
+              // 📩 Apply Button
               Center(
                 child: SizedBox(
                   width: screenWidth * 0.55,
                   height: screenHeight * 0.05,
                   child: ElevatedButton(
-                    onPressed: () => _applyForInternship(context), // Call apply function
+                    onPressed: () => _applyForInternship(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF196AB3),
                       shape: RoundedRectangleBorder(
@@ -182,10 +178,10 @@ class internship_details_screen extends StatelessWidget {
     );
   }
 
-  // 📌 Helper Methods for Titles & Bullet Points
+  // 📌 Section Title
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(top: 10, bottom: 4),
       child: Text(
         title,
         style: TextStyle(
@@ -196,6 +192,7 @@ class internship_details_screen extends StatelessWidget {
     );
   }
 
+  // 🔹 Bullet Point Item
   Widget _buildBulletPoint(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -205,7 +202,7 @@ class internship_details_screen extends StatelessWidget {
           Text("• ", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           Expanded(
             child: Text(
-              text,
+              text.trim(),
               style: TextStyle(fontSize: 14),
             ),
           ),
@@ -214,12 +211,10 @@ class internship_details_screen extends StatelessWidget {
     );
   }
 
-  // Helper method to build dynamic bullet points from a list
+  // 🔁 Build from List
   List<Widget> _buildDynamicBulletPoints(List<dynamic>? items) {
     if (items == null || items.isEmpty) {
-      return [
-        _buildBulletPoint("No information available."),
-      ];
+      return [_buildBulletPoint("No information available.")];
     }
     return items.map((item) => _buildBulletPoint(item.toString())).toList();
   }
