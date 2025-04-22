@@ -6,6 +6,8 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 // Firebase config
 import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 // Auth
 import 'Student Screens/Auth/auth_provider.dart';
@@ -26,6 +28,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Supabase.initialize(
+    url: 'https://xafztwdrytnggitdbioc.supabase.co', // 🔁 استبدل بالرابط من Supabase
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhZnp0d2RyeXRuZ2dpdGRiaW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MDU5ODgsImV4cCI6MjA2MDQ4MTk4OH0.Xn0b_ArBP2-sSyS9WBGHKlVUEMHMPt7FtCy5XBPtehk', // 🔁 استبدل بالمفتاح من Supabase
+  );
+
 
   // Initialize OneSignal
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
