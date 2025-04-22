@@ -53,6 +53,10 @@ dependencies:
   onesignal_flutter: ^5.1.2
   flutter_dotenv: ^5.2.1
   dialog_flowtter: ^0.3.3
+  supabase_flutter: ^2.8.4
+  cached_network_image: ^3.2.3
+  cross_file: ^0.3.3
+  flutter_uploader: 3.0.0-beta.4
 
 
 
@@ -85,7 +89,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/videos/
-    - assets/dialog_flow_auth.json
+
 
 
   # The following section is specific to Flutter packages.
