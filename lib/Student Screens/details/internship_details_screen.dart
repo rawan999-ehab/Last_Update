@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../Features/Apply Process/CV_Options_Screen.dart';
 
 class InternshipDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> internshipData;
 
   const InternshipDetailsScreen({Key? key, required this.internshipData}) : super(key: key);
 
-  Future<void> _applyForInternship(BuildContext context) async {
+  Future<void> _checkAndProceed(BuildContext context) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
 
@@ -18,7 +19,6 @@ class InternshipDetailsScreen extends StatelessWidget {
         return;
       }
 
-      // Check if already applied
       var existingApplication = await FirebaseFirestore.instance
           .collection('applications')
           .where('userId', isEqualTo: user.uid)
@@ -32,23 +32,16 @@ class InternshipDetailsScreen extends StatelessWidget {
         return;
       }
 
-      final requestId = FirebaseFirestore.instance.collection('applications').doc().id;
-
-      await FirebaseFirestore.instance.collection('applications').doc(requestId).set({
-        "companyId": internshipData["companyId"],
-        "internshipId": internshipData["internshipId"],
-        "userId": user.uid,
-        "requestId": requestId,
-        "status": "Pending",
-        "date": FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Application submitted successfully!")),
+      // If all checks pass, navigate to the CVOptionScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CVOptionScreen(),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to submit application. Please try again.")),
+        SnackBar(content: Text("Failed to proceed. Please try again.")),
       );
     }
   }
@@ -77,7 +70,7 @@ class InternshipDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔶 Company Logo + Job Title
+              // 🔶 Company Info
               Container(
                 padding: EdgeInsets.all(7),
                 decoration: BoxDecoration(
@@ -126,7 +119,6 @@ class InternshipDetailsScreen extends StatelessWidget {
               ),
               SizedBox(height: screenHeight * 0.010),
 
-              // 📌 Responsibilities
               _buildSectionTitle("What you will be doing:"),
               ..._buildDynamicBulletPoints(
                 internshipData["whatYouWillBeDoing"] is List
@@ -134,7 +126,6 @@ class InternshipDetailsScreen extends StatelessWidget {
                     : (internshipData["whatYouWillBeDoing"] as String?)?.split("-") ?? [],
               ),
 
-              // 🔍 Requirements
               _buildSectionTitle("What we are looking for:"),
               ..._buildDynamicBulletPoints(
                 internshipData["whatWeAreLookingFor"] is List
@@ -142,7 +133,6 @@ class InternshipDetailsScreen extends StatelessWidget {
                     : (internshipData["whatWeAreLookingFor"] as String?)?.split("-") ?? [],
               ),
 
-              // 🎓 Qualifications
               _buildSectionTitle("Preferred Qualifications:"),
               ..._buildDynamicBulletPoints(
                 internshipData["preferredQualifications"] is List
@@ -156,7 +146,7 @@ class InternshipDetailsScreen extends StatelessWidget {
                   width: screenWidth * 0.55,
                   height: screenHeight * 0.05,
                   child: ElevatedButton(
-                    onPressed: () => _applyForInternship(context),
+                    onPressed: () => _checkAndProceed(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF196AB3),
                       shape: RoundedRectangleBorder(
@@ -165,7 +155,7 @@ class InternshipDetailsScreen extends StatelessWidget {
                     ),
                     child: Text(
                       "Apply Now",
-                      style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ),
@@ -178,7 +168,6 @@ class InternshipDetailsScreen extends StatelessWidget {
     );
   }
 
-  // 📌 Section Title
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.only(top: 10, bottom: 4),
@@ -192,7 +181,6 @@ class InternshipDetailsScreen extends StatelessWidget {
     );
   }
 
-  // 🔹 Bullet Point Item
   Widget _buildBulletPoint(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -211,7 +199,6 @@ class InternshipDetailsScreen extends StatelessWidget {
     );
   }
 
-  // 🔁 Build from List
   List<Widget> _buildDynamicBulletPoints(List<dynamic>? items) {
     if (items == null || items.isEmpty) {
       return [_buildBulletPoint("No information available.")];

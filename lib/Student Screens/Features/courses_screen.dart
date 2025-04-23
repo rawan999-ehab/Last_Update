@@ -1,30 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Courses_Screens/Cybersecurity.dart';
-import 'main_student.dart';
+import 'main_student.dart'; // Import your MainScreen
 
 class CoursesScreen extends StatelessWidget {
-  static const String routeName = '/CoursesScreen';
-  const CoursesScreen({Key? key}) : super(key: key);
+  static const String routeName = '/CoursesScreen'; // Named route
+
+  const CoursesScreen({Key? key}) : super(key: key); // ✅ الحل البديل
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        // Navigate to MainScreen when the back arrow is pressed
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MainScreen()),
         );
-        return false;
+        return false; // Prevent default back behavior
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white, // White background
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: Text("courses"),
+          title: Text("Courses"),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
+              // Navigate to MainScreen when the back arrow is pressed
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MainScreen()),
@@ -38,7 +40,7 @@ class CoursesScreen extends StatelessWidget {
               expandedHeight: 300.0,
               floating: false,
               pinned: false,
-              automaticallyImplyLeading: false,
+              automaticallyImplyLeading: false, // Remove back arrow from the image
               flexibleSpace: FlexibleSpaceBar(
                 background: Image.asset(
                   'assets/images/courses.jpeg',
@@ -57,28 +59,7 @@ class CoursesScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: _fetchCourses(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(child: Text('No courses available.'));
-                      } else {
-                        final courses = snapshot.data!;
-                        return Column(
-                          children: courses.map((course) {
-                            return FieldButton(
-                              text: course['name'] ?? 'No Title',
-                              id: course['id'],
-                            );
-                          }).toList(),
-                        );
-                      }
-                    },
-                  ),
+                  ..._buildFieldButtons(context), // Pass context to the function
                 ],
               ),
             ),
@@ -88,18 +69,37 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchCourses() async {
-    final supabase = Supabase.instance.client;
-    final response = await supabase.from('courses').select('id, name');
-    return List<Map<String, dynamic>>.from(response);
+  List<Widget> _buildFieldButtons(BuildContext context) {
+    List<String> fields = [
+      'Cybersecurity',
+      'Networking',
+      'Software Development',
+      'Front End Developer',
+      'Back End Developer',
+      'Full Stack Developer',
+      'Mobile Application Development',
+      'Operating Systems',
+      'UI/UX Design',
+      'Cloud Computing',
+      'Databases',
+      'Database Administrator',
+      'Data Science and Analytics',
+      'C programming language',
+      'C++ programming language',
+      'C# programming language',
+      'Information Technology',
+      'Software Engineering',
+      'Project Management',
+    ];
+    return fields.map((field) => FieldButton(text: field, context: context)).toList();
   }
 }
 
 class FieldButton extends StatelessWidget {
   final String text;
-  final int id;
+  final BuildContext context;
 
-  const FieldButton({required this.text, required this.id});
+  FieldButton({required this.text, required this.context});
 
   @override
   Widget build(BuildContext context) {
@@ -112,12 +112,14 @@ class FieldButton extends StatelessWidget {
         ),
         child: TextButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CourseCat(courseId: id),
-              ),
-            );
+            if (text == "Cybersecurity") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Cybersecurity()),
+              );
+            } else {
+              print('Button pressed: $text');
+            }
           },
           child: Text(
             text,
