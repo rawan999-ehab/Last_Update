@@ -6,6 +6,7 @@ import '../dialog messages/quiz_completion_dialog.dart';
 import '../dialog messages/exit_confirmation_dialog.dart';
 import '../dialog messages/timeout_dialog.dart';
 import 'quiz_timer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class QuizScreen extends StatefulWidget {
   final String quizTitle;
@@ -40,6 +41,39 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   late QuizTimer _quizTimer;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  String _calculateLevel(int score, int totalQuestions) {
+    if (totalQuestions == 0) return 'No Level';
+
+    double percentage = (score / totalQuestions) * 100;
+
+    if (percentage >= 85) return 'Advanced';
+    if (percentage >= 75) return 'Intermediate';
+    if (percentage >= 50) return 'Beginner';
+    return 'No Level';
+  }
+
+  Future<void> _saveQuizResults(String userId, int score) async {
+    try {
+      final level = _calculateLevel(score, questions.length);
+
+      await _firestore.collection('Assessment_Results').add({
+        "UserId": userId,
+        'quizTitle': widget.quizTitle,
+        'level': level,
+        'score': score,
+        'totalQuestions': questions.length,
+        'percentage': (score / questions.length) * 100,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('Quiz results saved successfully with level: $level');
+    } catch (e) {
+      debugPrint('Error saving quiz results: $e');
+    }
+  }
+
+
+
   @override
   void initState() {
     super.initState();
@@ -73,11 +107,20 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     if (mounted) setState(() {});
   }
 
-  void _handleTimeOut() {
+  void _handleTimeOut() async {
     if (quizCompleted || _timeOutOccurred) return;
     setState(() => _timeOutOccurred = true);
 
     final score = _calculateCurrentScore();
+
+    // Get the current user ID
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      await _saveQuizResults(userId, score);
+    } else {
+      debugPrint('User not logged in. Cannot save quiz results.');
+    }
+
     widget.onQuizCompleted?.call(score);
 
     showDialog(
@@ -94,6 +137,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       ),
     );
   }
+
 
   Future<bool> _checkQuizStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -196,7 +240,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     return score;
   }
 
-  void moveToNextQuestion() {
+  Future<void> moveToNextQuestion() async {
     if (userAnswers[currentQuestionIndex] != null &&
         !alreadyCounted[currentQuestionIndex]) {
       final correctIndex = questions[currentQuestionIndex]
@@ -221,6 +265,13 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       _markQuizCompleted();
       setState(() => quizCompleted = true);
 
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        await _saveQuizResults(userId, correctAnswers);
+      } else {
+        debugPrint('User not logged in. Cannot save quiz results.');
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -234,6 +285,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       widget.onQuizCompleted?.call(correctAnswers);
     }
   }
+
 
   Future<bool> _onWillPop() async {
     if (quizCompleted || _timeOutOccurred) return true;
@@ -251,6 +303,14 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
 
     if (shouldExit ?? false) {
       await _markQuizExited();
+
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        await _saveQuizResults(userId, currentScore);
+      } else {
+        debugPrint('User not logged in. Cannot save quiz results.');
+      }
+
       setState(() => quizExited = true);
       widget.onQuizCompleted?.call(currentScore);
       return true;
@@ -259,6 +319,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       return false;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

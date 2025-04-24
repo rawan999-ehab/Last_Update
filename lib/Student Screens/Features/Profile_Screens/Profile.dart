@@ -1,18 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:project/Student%20Screens/Features/Profile_Screens/Setting.dart';
 import '../../Auth/login_screen.dart';
 import 'Edit_Profile.dart';
 import 'Interested_Field.dart';
 import 'Saved_Internships.dart';
 
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: ProfileScreen(),
-  ));
+// Constants
+class AppColors {
+  static const primary = Color(0xFF2252A1);
+  static const error = Colors.red;
+  static const greyShade = Colors.grey;
 }
+
+final supabase = Supabase.instance.client;
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -21,13 +26,184 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _imageFile;
+  String _name = 'Loading...';
+  String _email = 'Loading...';
+  String? _imageUrl;
+  String? _userId;
+  bool _isLoading = false;
+  bool _isLoadingImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUser();
+  }
+
+  Future<void> _initializeUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Handle not logged in case
+      return;
+    }
+    setState(() {
+      _userId = user.uid;
+    });
+    await _loadUserData();
+    await _loadProfileImage();
+  }
+
+  Future<void> _loadUserData() async {
+    if (_userId == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .get();
+
+      if (!mounted) return;
+
+      if (userDoc.exists) {
+        setState(() {
+          _name = userDoc.data()?['firstName'] ?? 'No Name';
+          _email = userDoc.data()?['email'] ?? 'No Email';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user data')),
+      );
+      debugPrint('Error loading user data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    if (_userId == null) return;
+
+    setState(() {
+      _isLoadingImage = true;
+    });
+
+    try {
+      final response = await supabase
+          .from('profile_images')
+          .select('image_url')
+          .eq('user_id', _userId!)
+          .single();
+
+      if (response['image_url'] != null) {
+        setState(() {
+          _imageUrl = response['image_url'];
+        });
+      }
+    } catch (e) {
+      debugPrint('No profile image found or error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingImage = false;
+        });
+      }
+    }
+  }
 
   Future<void> _pickImage() async {
-    final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
+    try {
+      final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedImage == null || _userId == null) return;
+
+      final file = File(pickedImage.path);
+      if (!await file.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('الملف المحدد غير موجود')),
+          );
+        }
+        return;
+      }
+
       setState(() {
-        _imageFile = File(pickedImage.path);
+        _imageFile = file;
+        _isLoadingImage = true;
       });
+
+      final fileExt = pickedImage.path.split('.').last.toLowerCase();
+      final fileName = '${_userId}_profile.$fileExt';
+      final filePath = fileName;
+
+      // تحديد نوع الملف بشكل صحيح
+      String mimeType;
+      switch (fileExt) {
+        case 'jpg':
+        case 'jpeg':
+          mimeType = 'image/jpeg';
+          break;
+        case 'png':
+          mimeType = 'image/png';
+          break;
+        case 'gif':
+          mimeType = 'image/gif';
+          break;
+        default:
+          mimeType = 'image/jpeg'; // افتراض
+      }
+
+      final fileBytes = await file.readAsBytes();
+
+      await supabase.storage
+          .from('profile-images')
+          .uploadBinary(
+        filePath,
+        fileBytes,
+        fileOptions: FileOptions(
+          contentType: mimeType,
+          upsert: true,
+        ),
+      );
+
+      // الحصول على رابط الصورة
+      final imageUrl = supabase.storage
+          .from('profile-images')
+          .getPublicUrl(filePath);
+
+      // حفظ البيانات في الجدول
+      await supabase.from('profile_images').upsert({
+        'user_id': _userId,
+        'image_url': imageUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      if (!mounted) return;
+      setState(() {
+        _imageUrl = imageUrl;
+      });
+
+    } catch (e) {
+      debugPrint('Error uploading image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('حدث خطأ أثناء رفع الصورة: ${e.toString()}')),
+
+    // رفع الملف كـ bytes
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingImage = false;
+        });
+      }
     }
   }
 
@@ -52,10 +228,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    _logout();  // تنفيذ تسجيل الخروج
+                    _logout();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2252A1),
+                    backgroundColor: AppColors.primary,
                     padding: EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -93,8 +269,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // دالة تسجيل الخروج التي تعيد المستخدم إلى صفحة تسجيل الدخول
-  void _logout() {
+  void _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -103,36 +280,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? backgroundImage;
+    if (_imageFile != null) {
+      backgroundImage = FileImage(_imageFile!);
+    } else if (_imageUrl != null) {
+      backgroundImage = NetworkImage(_imageUrl!);
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF2252A1)),
-          onPressed: () {},
+          icon: Icon(Icons.arrow_back, color: AppColors.primary),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Profile",
           style: TextStyle(
-              color: Color(0xFF2252A1),
+              color: AppColors.primary,
               fontSize: 22,
               fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : Column(
         children: [
           SizedBox(height: 20),
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              CircleAvatar(
+              _isLoadingImage
+                  ? CircularProgressIndicator(color: AppColors.primary)
+                  : CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey[300],
-                backgroundImage:
-                _imageFile != null ? FileImage(_imageFile!) : null,
-                child: _imageFile == null
+                backgroundImage: backgroundImage,
+                child: _imageUrl == null && _imageFile == null
                     ? Icon(Icons.person, size: 50, color: Colors.white)
                     : null,
               ),
@@ -142,7 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: CircleAvatar(
-                    backgroundColor: Color(0xFF2252A1),
+                    backgroundColor: AppColors.primary,
                     radius: 15,
                     child: Icon(Icons.edit, size: 16, color: Colors.white),
                   ),
@@ -152,12 +339,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: 10),
           Text(
-            'Rawan Ehab',
+            _name,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           Text(
-            'rawan99@gmail.com',
-            style: TextStyle(color: Colors.grey),
+            _email,
+            style: TextStyle(color: AppColors.greyShade),
           ),
           SizedBox(height: 15),
           ElevatedButton(
@@ -170,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF2252A1),
+              backgroundColor: AppColors.primary,
               shape: StadiumBorder(),
               padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
@@ -196,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }),
                 _buildMenuItem(Icons.history, 'Student History'),
-                _buildMenuItem(Icons.bookmark, 'Setting', onTap: () {
+                _buildMenuItem(Icons.settings, 'Settings', onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => SettingScreen()),
@@ -206,7 +393,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildMenuItem(
                   Icons.logout,
                   'Logout',
-                  iconColor: Colors.red, // اللون الأحمر للأيقونة
+                  iconColor: AppColors.error,
                   onTap: _showLogoutDialog,
                 ),
               ],
@@ -218,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenuItem(IconData icon, String title, {
-    Color iconColor = const Color(0xFF2252A1),
+    Color iconColor = AppColors.primary,
     Color textColor = Colors.black,
     VoidCallback? onTap,
   }) {
