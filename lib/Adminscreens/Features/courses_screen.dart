@@ -103,7 +103,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AddCourse()));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => CourseUploadPage()));
         },
         backgroundColor: Color(0xFF196AB3),
         shape: CircleBorder(),

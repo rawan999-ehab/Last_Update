@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project/services/snackbar_service.dart';
 import 'package:project/Company%20Screens/main_company.dart';
 import 'package:project/Student Screens/Features/main_student.dart';
-import 'package:project/Admin screens/Features/Admin-MS.dart';
+import  'package:project/Adminscreens/Features/Admin-MS.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
