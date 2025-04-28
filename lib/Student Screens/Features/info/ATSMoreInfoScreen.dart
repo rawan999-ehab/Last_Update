@@ -9,18 +9,20 @@ class ATSMoreInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200], // Light grey background
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'More Information',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
-        ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 2, // Slight elevation for depth
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Color(0xFF2252A1)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          "More Information",
+          style: TextStyle(color: Color(0xFF2252A1), fontSize: 21, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -50,7 +52,7 @@ class ATSMoreInfoScreen extends StatelessWidget {
                   title: 'Use Correct Terminology',
                   description: 'Write skills and job titles in commonly used formats (e.g., "HTML5" instead of "html").',
                 ),
-               _TipCard(
+                _TipCard(
                   icon: Icons.search,
                   title: 'Optimize Keywords',
                   description: 'Include keywords from the job description to improve ATS matching.',
@@ -75,7 +77,7 @@ class ATSMoreInfoScreen extends StatelessWidget {
       style: const TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: Color(0xFF2252A1),
       ),
     );
   }
@@ -86,10 +88,10 @@ class ATSMoreInfoScreen extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           height: 1.5,
-          color: Colors.black87,
+          color: Colors.grey[700],
         ),
       ),
     );
@@ -127,19 +129,19 @@ class _TipCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Color(0xFF2252A1),
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     description,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       height: 1.5,
-                      color: Colors.black87,
+                      color: Colors.grey[700],
                     ),
                   ),
                 ],

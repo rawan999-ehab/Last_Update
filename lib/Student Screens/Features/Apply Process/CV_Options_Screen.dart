@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'Build_CV_Screen.dart';
+import 'Upload_CV_Screen.dart'; // استوردنا صفحة الرفع
 
 class CVOptionScreen extends StatefulWidget {
   @override
@@ -7,7 +8,7 @@ class CVOptionScreen extends StatefulWidget {
 }
 
 class _CVOptionScreenState extends State<CVOptionScreen> {
-  bool showCVForm = false;
+  String selectedOption = ''; // بدل showCVForm استخدمنا selectedOption
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +26,10 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
         title: Text(
           "Apply Process",
           style: TextStyle(
-              color: Color(0xFF2252A1),
-              fontSize: 22,
-              fontWeight: FontWeight.bold),
+            color: Color(0xFF2252A1),
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -46,14 +48,14 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      showCVForm = true;
+                      selectedOption = 'build'; // لما يختار Build
                     });
                   },
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 8),
                     padding: EdgeInsets.symmetric(vertical: 25),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: selectedOption == 'build' ? Colors.blue.shade50 : Colors.white,
                       border: Border.all(color: Colors.blue, width: 2),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -73,13 +75,15 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/uploadCV');
+                    setState(() {
+                      selectedOption = 'upload'; // لما يختار Upload
+                    });
                   },
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 8),
                     padding: EdgeInsets.symmetric(vertical: 25),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: selectedOption == 'upload' ? Colors.blue.shade50 : Colors.white,
                       border: Border.all(color: Colors.blue, width: 2),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -98,14 +102,21 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
               ),
             ],
           ),
-          if (showCVForm) ...[
-            SizedBox(height: 40),
+          SizedBox(height: 40),
+          if (selectedOption == 'build') ...[
             Text(
               'Fill Your CV Information:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             BuildCVScreen(),
+          ] else if (selectedOption == 'upload') ...[
+            Text(
+              'Upload Your CV Information:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            UploadCVScreen(), // حطينا الفورم هنا
           ],
         ],
       ),
