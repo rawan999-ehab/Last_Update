@@ -26,7 +26,7 @@ class _MainCompanyState extends State<MainCompany> {
       HomeScreen(companyid: widget.companyId), // تمرير companyId إلى HomeScreen
       AgreementScreen(),
       HistoryScreen(),
-      ProfileScreen(),
+      ProfileScreen(companyId: widget.companyId),
     ];
 
     return Scaffold(

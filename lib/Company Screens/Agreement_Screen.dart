@@ -3,20 +3,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'View_Students_Info.dart';
 import 'CompanyService.dart';
 import 'package:project/Student Screens/Auth/auth_service.dart';
+
 class AgreementScreen extends StatefulWidget {
   @override
-  _AgreementScreenState createState() => _AgreementScreenState();}
+  _AgreementScreenState createState() => _AgreementScreenState();
+}
+
 class _AgreementScreenState extends State<AgreementScreen> {
   String? companyId;
+
   @override
   void initState() {
     super.initState();
     _loadCompanyId();
   }
+
   Future<void> _loadCompanyId() async {
     String? id = await AuthService().getStoredCompanyId();
     setState(() {
-      companyId = id;});
+      companyId = id;
+    });
     if (id != null) {
       Map<String, dynamic>? companyData = await AuthService().getCompanyById(id);
       if (companyData != null) {
@@ -24,6 +30,7 @@ class _AgreementScreenState extends State<AgreementScreen> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (companyId == null) {
@@ -32,6 +39,7 @@ class _AgreementScreenState extends State<AgreementScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -61,22 +69,29 @@ class _AgreementScreenState extends State<AgreementScreen> {
             print("⏳ Fetching internships...");
             return Center(child: CircularProgressIndicator());
           }
+
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             print("❌ No internships found!");
             return Center(child: Text("No internships available"));
           }
+
           final interns = snapshot.data!.docs;
           print("✅ Internships Found: ${interns.length}");
+
           return ListView.builder(
             itemCount: interns.length,
             itemBuilder: (context, index) {
               final data = interns[index].data() as Map<String, dynamic>;
               print("🎓 Internship Loaded: ${data['title']}");
-              return buildInternshipCard(context, data);},);
+              print("🔑 Internship ID: ${data['internshipId']}");
+              return buildInternshipCard(context, data);
+            },
+          );
         },
       ),
     );
   }
+
   Card buildInternshipCard(BuildContext context, Map<String, dynamic> internship) {
     print("🎭 Building Internship Card for: ${internship['title'] ?? 'Unknown'}");
     return Card(
@@ -111,13 +126,21 @@ class _AgreementScreenState extends State<AgreementScreen> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    print("📜 Navigating to ViewStudentsInfo for Internship ID: ${internship['companyId'] ?? 'Unknown'}");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ViewStudentsInfo(internshipId: internship['companyId'] ?? ''),
-                      ),
-                    );
+                    print("📜 Navigating to ViewStudentsInfo for Internship ID: ${internship['internshipId'] ?? 'Unknown'}");
+                    if (internship['internshipId'] != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ViewStudentsInfo(
+                            internshipId: internship['internshipId']!,
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Internship ID is missing")),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,

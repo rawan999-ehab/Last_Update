@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       debugPrint('Error uploading image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ أثناء رفع الصورة: ${e.toString()}')),
+          SnackBar(content: Text('An error occurred while uploading the image: ${e.toString()}')),
 
     // رفع الملف كـ bytes
         );
