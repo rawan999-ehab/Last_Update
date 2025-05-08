@@ -29,70 +29,79 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF2252A1)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2252A1)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          "طريقة التقديم",
+        title: const Text(
+          "Application Method",
           style: TextStyle(
             color: Color(0xFF2252A1),
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
       ),
-
       body: Padding(
         padding: EdgeInsets.all(screenWidth * 0.05),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: screenHeight * 0.02),
-            Text(
-              'اختر طريقة التقديم:',
+            const Text(
+              'Choose your application method:',
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
+                letterSpacing: 0.2,
               ),
             ),
-
             SizedBox(height: screenHeight * 0.04),
 
-            // خيارات التقديم
+            // Application options
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // خيار بناء السيرة الذاتية
+                // Build CV option
                 _buildOptionCard(
                   icon: Icons.edit_document,
-                  title: 'إنشاء سيرة ذاتية',
+                  title: 'Create Resume',
+                  description: 'Build your resume using our tool',
                   isSelected: selectedOption == 'build',
                   onTap: () => setState(() => selectedOption = 'build'),
-                  width: screenWidth * 0.42,
+                  width: screenWidth * 0.45,
                 ),
 
-                // خيار رفع السيرة الذاتية
+                // Upload CV option
                 _buildOptionCard(
-                  icon: Icons.upload_file,
-                  title: 'رفع سيرة ذاتية',
+                  icon: Icons.upload_file_rounded,
+                  title: 'Upload Resume',
+                  description: 'Use your existing resume',
                   isSelected: selectedOption == 'upload',
                   onTap: () => setState(() => selectedOption = 'upload'),
-                  width: screenWidth * 0.42,
+                  width: screenWidth * 0.45,
                 ),
               ],
             ),
 
-            SizedBox(height: screenHeight * 0.05),
+            SizedBox(height: screenHeight * 0.04),
 
-            // عرض الشاشة المختارة
+            // Display selected screen
             if (selectedOption.isNotEmpty)
               Expanded(
                 child: Container(
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade200),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: selectedOption == 'build'
                       ? BuildCVScreen(
@@ -111,49 +120,64 @@ class _CVOptionScreenState extends State<CVOptionScreen> {
     );
   }
 
-  // ويدجت لبطاقة الخيار
+  // Option card widget
   Widget _buildOptionCard({
     required IconData icon,
     required String title,
+    required String description,
     required bool isSelected,
     required VoidCallback onTap,
     required double width,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: width,
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFFE3F2FD) : Colors.white,
+          color: isSelected ? const Color(0xFFE8F3FF) : Colors.white,
           border: Border.all(
-            color: isSelected ? Color(0xFF196AB3) : Colors.grey,
+            color: isSelected ? const Color(0xFF2252A1) : Colors.grey.shade200,
             width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isSelected
+                  ? const Color(0xFF2252A1).withOpacity(0.15)
+                  : Colors.grey.withOpacity(0.08),
               spreadRadius: 2,
-              blurRadius: 5,
-              offset: Offset(0, 3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 30,
-                color: isSelected ? Color(0xFF196AB3) : Colors.grey),
-            SizedBox(height: 10),
+            Icon(
+              icon,
+              size: 36,
+              color: isSelected ? const Color(0xFF2252A1) : Colors.grey.shade500,
+            ),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isSelected ? Color(0xFF196AB3) : Colors.grey,
-                fontWeight: FontWeight.bold,
+                color: isSelected ? const Color(0xFF2252A1) : const Color(0xFF333333),
+                fontWeight: FontWeight.w600,
                 fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
               ),
             ),
           ],

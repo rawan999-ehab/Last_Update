@@ -21,9 +21,17 @@ class CoursesScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: Text("courses"),
+          title: Text(
+            "Courses",
+            style: TextStyle(
+                color: Color(0xFF2252A1),
+                fontSize: 22,
+                fontWeight: FontWeight.bold),
+
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, color: Color(0xFF2252A1)), // Optional: make the back arrow the same color
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -31,8 +39,10 @@ class CoursesScreen extends StatelessWidget {
               );
             },
           ),
+
         ),
         body: CustomScrollView(
+
           slivers: <Widget>[
             SliverAppBar(
               expandedHeight: 300.0,
@@ -105,23 +115,26 @@ class FieldButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.blue, width: 2),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CourseCat(courseId: id),
-              ),
-            );
-          },
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 16),
+      child: SizedBox(
+        width: 300,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.blue, width: 2),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CourseCat(courseId: id),
+                ),
+              );
+            },
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 16),
+            ),
           ),
         ),
       ),

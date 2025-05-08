@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'profile_screen.dart';
+import 'internship_screen.dart';
+import 'overview_screen.dart';
+import '../ViewProfiles/profile_screen.dart';
 import 'courses_screen.dart';
 import '../bottom_navbar.dart'; // Import your custom navbar
 class Adminms extends StatefulWidget {
@@ -11,7 +12,7 @@ class Adminms extends StatefulWidget {
 class _MainScreenState extends State<Adminms> {
   int _selectedIndex = 0;
   final List<Widget> _screens = [
-    Placeholder(),
+    OverviewScreen(),
     HomeScreen(),
     CoursesScreen(),
     ViewProfiles()

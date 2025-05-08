@@ -3,8 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
-import 'roadmab_screen.dart';
-
 class CourseCat extends StatefulWidget {
   static const String routeName = "coursecat";
 
@@ -92,11 +90,8 @@ class _CourseCatState extends State<CourseCat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
-        centerTitle: true,
         title: FutureBuilder<Map<String, dynamic>?>(
           future: _courseFuture,
           builder: (context, snapshot) {
@@ -104,7 +99,7 @@ class _CourseCatState extends State<CourseCat> {
               return Text(
                 snapshot.data!['name'],
                 style: TextStyle(
-                  color: Color(0xFF2252A1),
+                  color: Colors.black,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -113,19 +108,17 @@ class _CourseCatState extends State<CourseCat> {
             return Text(
               'Course',
               style: TextStyle(
-                color: Color(0xFF2252A1),
+                color: Colors.black,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             );
           },
         ),
-        iconTheme: IconThemeData(color: Color(0xFF2252A1),
-        ),
+        iconTheme: IconThemeData(color: Colors.black),
         elevation: 0,
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
-
         future: _courseFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -144,14 +137,14 @@ class _CourseCatState extends State<CourseCat> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Roadmap Image
-                if (course['image_url'] != null && course['image_url'].isNotEmpty)
+                // Course image in a frame
+                if (course['roadmap_images'] != null && course['roadmap_images'].isNotEmpty)
                   Container(
-                    padding: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(8), // Frame padding
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      /*border: Border.all(color: Color(0xFF196AB3), width: 2),
+                      border: Border.all(color: Color(0xFF196AB3), width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.2),
@@ -159,12 +152,12 @@ class _CourseCatState extends State<CourseCat> {
                           blurRadius: 5,
                           offset: Offset(0, 3),
                         ),
-                      ],*/
+                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        course['image_url'], // remove [0]
+                        course['roadmap_images'][0],
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -172,51 +165,34 @@ class _CourseCatState extends State<CourseCat> {
                     ),
                   ),
 
-
                 SizedBox(height: 16),
 
-                // 2. Description
+                Text(
+                  course['description'],
+                  style: TextStyle(fontSize: 14, height: 1.5),
+                ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Text(
-                    course['description'],
-                    textAlign: TextAlign.justify,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: Colors.black87,
+                SizedBox(height: 20),
+
+                Center(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      print("Roadmap Pressed");
+                    },
+                    icon: Image.asset('assets/images/roadmap.png', height: 24),
+                    label: Text("Roadmap", style: TextStyle(color: Color(0xFF196AB3))),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Color(0xFF196AB3)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
 
-
-                // Icon and Video Section
-                Row(
-                  children: [
-                    Icon(
-                      Icons.video_library,
-                      color: Color(0xFF196AB3),
-                      size: 24,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Watch Video',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF196AB3),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-
-                // 3. Video
+                // Video section
                 if (course['video_url'] != null && course['video_url'].isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0,),
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
                       child: GestureDetector(
@@ -256,60 +232,9 @@ class _CourseCatState extends State<CourseCat> {
                       ),
                     ),
                   ),
-                SizedBox(height: 25),
 
-                // 4. Roadmap Button (moved here)
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to Roadmap Screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => RoadmapScreen(courseId: widget.courseId)),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF196AB3),
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Explore Roadmap',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.arrow_forward,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                SizedBox(height: 24),
 
-                SizedBox(height: 32), // Added more space before
-                Text(
-                  'Places to Learn ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF196AB3),
-                  ),
-                ),
-                SizedBox(height: 32),
-
-
-                // 5. Companies section
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _companiesFuture,
                   builder: (context, snapshot) {
@@ -337,7 +262,6 @@ class _CourseCatState extends State<CourseCat> {
                 ),
               ],
             ),
-
           );
         },
       ),

@@ -50,10 +50,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       });
 
       // Query with orderBy to get newest internships first
-      // Assuming there's a 'createdAt' or 'postedDate' field
       QuerySnapshot querySnapshot = await _firestore
           .collection('interns')
-          .orderBy('timestamp', descending: true) // Change field name if needed
+          .orderBy('timestamp', descending: true)
           .get();
 
       // Convert QuerySnapshot to a List
@@ -66,8 +65,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       // Process internships in parallel for better performance
       await Future.wait(
         internships.map((job) async {
-          // Get company ID - first try company_id, then company name as fallback
-          String companyId = job["companyId"] ?? job["company"] ?? "unknown";
+          // Get company ID
+          String companyId = job["companyId"] ?? "unknown";
+
+          // Retrieve company name from company collection
+          if (companyId != "unknown") {
+            try {
+              DocumentSnapshot companyDoc = await _firestore.collection('company').doc(companyId).get();
+              if (companyDoc.exists) {
+                var companyData = companyDoc.data() as Map<String, dynamic>;
+                job["CompanyName"] = companyData["CompanyName"] ?? "Unknown Company";
+              }
+            } catch (e) {
+              print("Error fetching company data: $e");
+            }
+          }
+
           job["img_url"] = await _getCompanyImageUrl(companyId);
 
           // Format dates if available
@@ -151,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     return jobList.where((job) {
       final title = job["title"]?.toString().toLowerCase() ?? "";
-      final company = job["company"]?.toString().toLowerCase() ?? "";
+      final company = job["CompanyName"]?.toString().toLowerCase() ?? "";
       final location = job["location"]?.toString().toLowerCase() ?? "";
       final jobType = job["type"]?.toString().toLowerCase() ?? ""; // لازم يكون عندك type في بيانات التدريب
 
@@ -491,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     SizedBox(height: 4),
                     Text(
-                      job["company"] ?? "Unknown Company",
+                      job["CompanyName"] ?? "Unknown Company",
                       style: TextStyle(
                         color: Color(0xFF196AB3),
                         fontWeight: FontWeight.w500,
@@ -649,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildCompanyInitial(Map<String, dynamic> job, double screenWidth) {
-    final companyName = job["company"] ?? "?";
+    final companyName = job["CompanyName"] ?? "?";
     final initial = companyName.isNotEmpty ? companyName[0].toUpperCase() : "?";
 
     // Generate a consistent color based on company name

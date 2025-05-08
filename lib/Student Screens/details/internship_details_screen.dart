@@ -262,13 +262,51 @@ class InternshipDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 4),
-                    Text(
-                      internshipData["company"] ?? "Unknown Company",
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                        color: primaryColor,
-                      ),
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('company')
+                          .doc(internshipData["companyId"]) // هذا هو الـ ID
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Text(
+                            "Loading company...",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text(
+                            "Error loading company",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: Colors.red,
+                            ),
+                          );
+                        } else if (!snapshot.hasData || !snapshot.data!.exists) {
+                          return Text(
+                            "Unknown Company",
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          );
+                        } else {
+                          final companyName = snapshot.data!["CompanyName"];
+                          return Text(
+                            companyName,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -291,7 +329,7 @@ class InternshipDetailsScreen extends StatelessWidget {
               Icon(Icons.access_time_rounded, size: 18, color: Colors.grey[600]),
               SizedBox(width: 6),
               Text(
-                internshipData["type"] ?? "Unknown type",
+                internshipData["duration"] ?? "Unknown type",
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -354,15 +392,20 @@ class InternshipDetailsScreen extends StatelessWidget {
         _buildOverviewItem(
           context,
           icon: Icons.calendar_today_rounded,
-          title: "Duration",
-          value: internshipData["duration"] ?? "Not specified",
+          title: "Created AT",
+          value: internshipData["timestamp"] != null
+              ? DateFormat('yyyy-MM-dd – kk:mm').format(
+            (internshipData["timestamp"] as Timestamp).toDate(),
+          )
+              : "Not specified",
         ),
+
         SizedBox(height: 12),
         _buildOverviewItem(
           context,
           icon: Icons.play_circle_outline_rounded,
-          title: "Start Date",
-          value: internshipData["startDate"] ?? "Not specified",
+          title: "type",
+          value: internshipData["type"] ?? "Not specified",
         ),
         SizedBox(height: 12),
         _buildOverviewItem(

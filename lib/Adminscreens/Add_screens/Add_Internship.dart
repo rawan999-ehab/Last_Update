@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:uuid/uuid.dart'; // For generating a unique internshipId
 
 class AddInternship extends StatefulWidget {
   @override
@@ -10,7 +13,7 @@ class AddInternship extends StatefulWidget {
 class _AddInternshipScreenState extends State<AddInternship> {
   final _formKey = GlobalKey<FormState>();
   File? _companyImage;
-  String companyName = '';
+  String CompanyName = '';
   String title = '';
   String location = '';
   String internship = 'Internship';
@@ -20,21 +23,61 @@ class _AddInternshipScreenState extends State<AddInternship> {
   String whatWeAreLookingFor = '';
   String preferredQualifications = '';
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _companyImage = File(pickedFile.path);
-      });
-    }
+  // Firebase initialization
+  @override
+  void initState() {
+    super.initState();
+    Firebase.initializeApp(); // Initialize Firebase
   }
 
-  void _submitForm() {
+
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       print("Form Submitted Successfully");
+
+      // Generate unique internshipId using UUID
+      String internshipId = Uuid().v4(); // Generate unique ID for the internship
+
+      // Save data to Firebase
+      try {
+        await FirebaseFirestore.instance.collection('interns').add({
+          'internshipId': internshipId, // Add the unique internship ID
+          'companyName': CompanyName,
+          'title': title,
+          'location': location,
+          'internship': internship,
+          'type': type,
+          'duration': duration,
+          'whatYouWillBeDoing': whatYouWillBeDoing,
+          'whatWeAreLookingFor': whatWeAreLookingFor,
+          'preferredQualifications': preferredQualifications,
+          'timestamp': FieldValue.serverTimestamp(), // Add server-generated timestamp
+        });
+
+        // Show a success message using SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Internship added successfully!'),
+            backgroundColor: Colors.green, // Green color for success
+          ),
+        );
+
+        // Navigate back after the submission
+        Navigator.pop(context);
+
+      } catch (e) {
+        // Show an error message if something goes wrong
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add internship: $e'),
+            backgroundColor: Colors.red, // Red color for error
+          ),
+        );
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +117,7 @@ class _AddInternshipScreenState extends State<AddInternship> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    Center(child: buildImagePicker()),
-                    buildTextField("Company Name", Icons.add_business_outlined, (value) => companyName = value!),
+                    buildTextField("Company Name", Icons.add_business_outlined, (value) => CompanyName = value!),
                     buildTextField("Internship Title", Icons.work, (value) => title = value!),
                     buildTextField("Location", Icons.location_on, (value) => location = value!),
                     buildDropdownField("Internship", Icons.style_rounded, ["Internship"], (value) => internship = value!),
@@ -109,35 +151,6 @@ class _AddInternshipScreenState extends State<AddInternship> {
     );
   }
 
-  Widget buildImagePicker() {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.blue, width: 2),
-            ),
-            child: _companyImage != null
-                ? ClipOval(
-              child: Image.file(_companyImage!, fit: BoxFit.cover, width: 120, height: 120),
-            )
-                : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.image, size: 40, color: Colors.blue),
-                Text("Upload Image", style: TextStyle(color: Colors.blue)),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 20),
-      ],
-    );
-  }
 
   Widget buildTextField(String label, IconData icon, Function(String?) onSaved, {int maxLines = 1}) {
     return Padding(

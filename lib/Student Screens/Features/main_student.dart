@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../assessments/main/quiz_home_screen.dart';
+import 'Assessment/models/Assessment.dart';
 import 'home_screen.dart';
 import 'Profile_Screens/Profile.dart';
 import 'feedback_screen.dart';
 import 'ats_screen.dart';
 import 'courses_screen.dart';
 import '../bottom_navbar.dart'; // Import your custom navbar
+import 'Assessment/mainAssessment.dart';
 
 class MainScreen extends StatefulWidget {
   static const String routeName = '/MainScreen';
@@ -21,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     CoursesScreen(),
     AtsScreen(),
-    QuizHomeScreen(),
+    AssessmentApp(),
     ProfileScreen()
   ];
 

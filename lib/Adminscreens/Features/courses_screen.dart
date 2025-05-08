@@ -1,174 +1,300 @@
 import 'package:flutter/material.dart';
-import '../Courses_Screens/Cybersecurity.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Add_screens/Add_Course.dart';
+import 'coursecat.dart';
 
 class CoursesScreen extends StatefulWidget {
-  static const String routeName = "CoursesFieldsScreen";
+  static const String routeName = '/CoursesScreen';
+  const CoursesScreen({Key? key}) : super(key: key);
 
   @override
   _CoursesScreenState createState() => _CoursesScreenState();
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  List<String> fields = [
-    'Cybersecurity',
-    'Networking',
-    'Software Development',
-    'Front End Developer',
-    'Back End Developer',
-    'Full Stack Developer',
-    'Mobile Application Development',
-    'Operating Systems',
-    'UI/UX Design',
-    'Cloud Computing',
-    'Databases',
-    'Database Administrator',
-    'Data Science and Analytics',
-    'C programming language',
-    'C++ programming language',
-    'C# programming language',
-    'Information Technology',
-    'Software Engineering',
-    'Project Management',
-  ];
+  late Future<List<Map<String, dynamic>>> _coursesFuture;
+  final Color primaryColor = const Color(0xFF2252A1);
 
-  void _deleteField(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Confirm Delete"),
-        content: Text("Are you sure you want to delete this course?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: TextStyle(color: Colors.blue)),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                fields.removeAt(index);
-              });
-              Navigator.pop(context);
-              _showMessage();
-            },
-            child: Text("Confirm", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _coursesFuture = _fetchCourses();
   }
 
-  void _showMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Course deleted successfully"),
-        backgroundColor: Color(0xFF196AB3),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  // Refresh the courses list
+  void _refreshCourses() {
+    setState(() {
+      _coursesFuture = _fetchCourses();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: <Widget>[
-          SliverAppBar(
-            expandedHeight: 300.0,
-            floating: false,
-            pinned: false,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                'assets/images/courses.jpeg',
-                fit: BoxFit.fill,
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CourseUploadPage()),
+            );
+            // Refresh courses list when returning from add course page
+            _refreshCourses();
+          },
+          backgroundColor: primaryColor,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white, size: 30),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+        body: CustomScrollView(
+          slivers: <Widget>[
+            SliverAppBar(
+              expandedHeight: 300.0,
+              floating: false,
+              pinned: false,
+              automaticallyImplyLeading: false,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Image.asset(
+                  'assets/images/courses.jpeg',
+                  fit: BoxFit.fill,
+                ),
               ),
             ),
-          ),
-          SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Choose Your Field',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2252A1)),
-                    textAlign: TextAlign.center,
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Choose Your Field',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-                ..._buildFieldButtons(context),
-              ],
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _coursesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error: ${snapshot.error}',
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              children: [
+                                Icon(Icons.folder_open, size: 48, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No courses available.',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      } else {
+                        final courses = snapshot.data!;
+                        return Column(
+                          children: courses.map((course) {
+                            return FieldButton(
+                              text: course['name'] ?? 'No Title',
+                              id: course['id'],
+                              onDelete: () async {
+                                await _showDeleteConfirmation(context, course);
+                              },
+                            );
+                          }).toList(),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 80), // Add space at bottom for FAB
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => CourseUploadPage()));
-        },
-        backgroundColor: Color(0xFF196AB3),
-        shape: CircleBorder(),
-        child: Icon(Icons.add, color: Colors.white, size: 30),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  List<Widget> _buildFieldButtons(BuildContext context) {
-    return List.generate(fields.length, (index) {
-      return FieldButton(
-        text: fields[index],
-        onDelete: () => _deleteField(index),
-        onEdit: () {
-          print("Edit course: ${fields[index]}");
-        },
-      );
-    });
+  // Show delete confirmation dialog
+  Future<void> _showDeleteConfirmation(BuildContext context, Map<String, dynamic> course) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Confirm Deletion'),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete "${course['name']}"?\nThis action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await _deleteCourse(course['id']);
+                  Navigator.of(context).pop();
+                  _refreshCourses();
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Course deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  // Show error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting course: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchCourses() async {
+    final supabase = Supabase.instance.client;
+    final response = await supabase.from('courses').select('id, name');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  Future<void> _deleteCourse(int id) async {
+    final supabase = Supabase.instance.client;
+    await supabase.from('courses').delete().eq('id', id);
   }
 }
 
 class FieldButton extends StatelessWidget {
   final String text;
+  final int id;
   final VoidCallback onDelete;
-  final VoidCallback onEdit;
 
-  FieldButton({required this.text, required this.onDelete, required this.onEdit});
+  const FieldButton({
+    Key? key,
+    required this.text,
+    required this.id,
+    required this.onDelete,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final Color primaryColor = const Color(0xFF2252A1);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.blue, width: 2),
+          border: Border.all(color: primaryColor, width: 2),
           borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          color: Colors.white,
         ),
         child: Row(
           children: [
             Expanded(
-              child: TextButton(
-                onPressed: () {
-                  if (text == "Cybersecurity") {
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(22)),
+                  onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => Cybersecurity()),
+                      MaterialPageRoute(
+                        builder: (context) => CourseCat(courseId: id),
+                      ),
                     );
-                  } else {
-                    print('Button pressed: $text');
-                  }
-                },
-                child: Text(
-                  text,
-                  style: TextStyle(fontSize: 16),
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+                    child: Text(
+                      text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.green),
-              onPressed: onEdit,
+            Container(
+              height: 30,
+              width: 1,
+              color: Colors.grey[300],
             ),
             IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(Icons.delete, color: Colors.red),
+              tooltip: 'Delete',
               onPressed: onDelete,
             ),
           ],
